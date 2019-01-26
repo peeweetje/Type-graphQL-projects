@@ -8,15 +8,13 @@ import { buildSchema, formatArgumentValidationError } from "type-graphql";
 import { createConnection } from "typeorm";
 
 import { redis } from "./redis";
-import { RegisterResolver } from "./modules/user/Register";
-import { LoginResolver } from "./modules/user/login";
-import { MeResolver } from "./modules/user/Me";
 
 const main = async () => {
   await createConnection();
 
   const schema = await buildSchema({
-    resolvers: [MeResolver, RegisterResolver, LoginResolver],
+    // grabs all the resolvers in the files
+    resolvers: [__dirname + "/modules/**/*.ts"],
     authChecker: ({ context: { req } }) => {
       return !!req.session.userId;
     }
@@ -25,7 +23,7 @@ const main = async () => {
   const apolloServer = new ApolloServer({
     schema,
     formatError: formatArgumentValidationError,
-    context: ({ req }: any) => ({ req })
+    context: ({ req, res }: any) => ({ req, res })
   });
 
   const app = Express();
